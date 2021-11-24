@@ -30,7 +30,65 @@ class landcover:
             'glc_2010_30m': ['..\\data\\landcover\\GLC2010\\GLC\\', '..\\data\\ChineseLandcover\\GLC2010\\'],
             'glc_2015_30m': ['..\\data\\landcover\\GLC2015\\GLC\\', '..\\data\\ChineseLandcover\\GLC2015\\'],
             'glc_2020_30m': ['..\\data\\landcover\\GLC2020\\GLC\\', '..\\data\\ChineseLandcover\\GLC2020\\'],
-            'glc_2017_10m_Tinghua': ['..\\data\\landcover\\GLC2017\\GLC\\', '..\\data\\ChineseLandcover\\GLC2017\\']}
+            'glc_2017_10m_Tinghua': ['..\\data\\landcover\\GLC2017\\GLC\\', '..\\data\\ChineseLandcover\\GLC2017\\'],
+            'GlobaLand30_2000': ['..\\data\\landcover\\GlobaLand30_2000\\GLC\\',
+                                   '..\\data\\ChineseLandcover\\GlobaLand30_2000\\'],
+            'GlobaLand30_2010': ['..\\data\\landcover\\GlobaLand30_2010\\GLC\\',
+                                   '..\\data\\ChineseLandcover\\GlobaLand30_2010\\'],
+            'GlobaLand30_2020': ['..\\data\\landcover\\GlobaLand30_2020\\GLC\\',
+                                   '..\\data\\ChineseLandcover\\GlobaLand30_2020\\']
+        }
+        self.datasetLink = {
+            'glc_1985_30m': {'author': '刘良云', 'company': '中国科学院空天信息创新研究院', '地域范围': '全球陆地区域',
+                             '共享方式': '公开共享', '数据格式': 'GeoTiff', '数据类型': '栅格', '数据内容': '土地覆盖分类',
+                             'link': 'https://data.casearth.cn/sdo/detail/6123651428a58f70c2a51e42'},
+            'glc_1990_30m': {'author': '刘良云', 'company': '中国科学院空天信息创新研究院', '地域范围': '全球陆地区域',
+                             '共享方式': '公开共享', '数据格式': 'GeoTiff', '数据类型': '栅格', '数据内容': '土地覆盖分类',
+                             'link': 'https://data.casearth.cn/sdo/detail/6123651428a58f70c2a51e43'},
+            'glc_1995_30m': {'author': '刘良云', 'company': '中国科学院空天信息创新研究院', '地域范围': '全球陆地区域',
+                             '共享方式': '公开共享', '数据格式': 'GeoTiff', '数据类型': '栅格', '数据内容': '土地覆盖分类',
+                             'link': 'https://data.casearth.cn/sdo/detail/6123651428a58f70c2a51e44'},
+            'glc_2000_30m': {'author': '刘良云', 'company': '中国科学院空天信息创新研究院', '地域范围': '全球陆地区域',
+                             '共享方式': '公开共享', '数据格式': 'GeoTiff', '数据类型': '栅格', '数据内容': '土地覆盖分类',
+                             'link': 'https://data.casearth.cn/sdo/detail/6123651428a58f70c2a51e45'},
+            'glc_2005_30m': {'author': '刘良云', 'company': '中国科学院空天信息创新研究院', '地域范围': '全球陆地区域',
+                             '共享方式': '公开共享', '数据格式': 'GeoTiff', '数据类型': '栅格', '数据内容': '土地覆盖分类',
+                             'link': 'https://data.casearth.cn/sdo/detail/6123651428a58f70c2a51e46'},
+            'glc_2010_30m': {'author': '刘良云', 'company': '中国科学院空天信息创新研究院', '地域范围': '全球陆地区域',
+                             '共享方式': '公开共享', '数据格式': 'GeoTiff', '数据类型': '栅格', '数据内容': '土地覆盖分类',
+                             'link': 'https://data.casearth.cn/sdo/detail/6123651428a58f70c2a51e47'},
+            'glc_2015_30m': {'author': '刘良云', 'company': '中国科学院空天信息创新研究院', '地域范围': '全球陆地区域',
+                             '共享方式': '公开共享', '数据格式': 'GeoTiff', '数据类型': '栅格', '数据内容': '土地覆盖分类',
+                             'link': 'https://data.casearth.cn/sdo/detail/6123651428a58f70c2a51e48'},
+            'glc_2020_30m': {'author': '刘良云', 'company': '中国科学院空天信息创新研究院', '地域范围': '全球陆地区域',
+                             '共享方式': '公开共享', '数据格式': 'GeoTiff', '数据类型': '栅格', '数据内容': '土地覆盖分类',
+                             'link': 'https://data.casearth.cn/sdo/detail/6123651428a58f70c2a51e49'},
+            'glc_2017_10m_Tinghua': {'author': '宫鹏', 'company': '清华大学', '地域范围': '全球陆地区域',
+                                     '共享方式': '公开共享', '数据格式': 'GeoTiff', '数据类型': '栅格', '数据内容': '土地覆盖分类',
+                                     'link': 'http://data.ess.tsinghua.edu.cn/fromglc10_2017v01.html'},
+            'GlobaLand30_2000': {'author': '陈军', 'company': '自然资源部', '地域范围': '全球陆地区域',
+                                 '共享方式': '公开共享', '数据格式': 'GeoTiff', '数据类型': '栅格', '数据内容': '土地覆盖分类',
+                                 'link': 'http://www.globeland30.org/'},
+            'GlobaLand30_2010': {'author': '陈军', 'company': '自然资源部', '地域范围': '全球陆地区域',
+                                 '共享方式': '公开共享', '数据格式': 'GeoTiff', '数据类型': '栅格', '数据内容': '土地覆盖分类',
+                                 'link': 'http://www.globeland30.org/', 'Overall_Accuracy': 0.835, 'Kappa': 0.78},
+            'GlobaLand30_2020': {'author': '陈军', 'company': '自然资源部', '地域范围': '全球陆地区域',
+                                 '共享方式': '公开共享', '数据格式': 'GeoTiff', '数据类型': '栅格', '数据内容': '土地覆盖分类',
+                                 'link': 'http://www.globeland30.org/', 'Overall_Accuracy': 0.8572, 'Kappa': 0.82},
+        }
+        self.label = {
+            'glc_1985_30m': ['dataset', 'Landcover_Dataset'],
+            'glc_1990_30m': ['dataset', 'Landcover_Dataset'],
+            'glc_1995_30m': ['dataset', 'Landcover_Dataset'],
+            'glc_2000_30m': ['dataset', 'Landcover_Dataset'],
+            'glc_2005_30m': ['dataset', 'Landcover_Dataset'],
+            'glc_2010_30m': ['dataset', 'Landcover_Dataset'],
+            'glc_2015_30m': ['dataset', 'Landcover_Dataset'],
+            'glc_2020_30m': ['dataset', 'Landcover_Dataset'],
+            'glc_2017_10m_Tinghua': ['dataset', 'Landcover_Dataset'],
+            'GlobaLand30_2000': ['dataset', 'Landcover_Dataset'],
+            'GlobaLand30_2010': ['dataset', 'Landcover_Dataset'],
+            'GlobaLand30_2020': ['dataset', 'Landcover_Dataset']}
         self.resolution = {'glc_2020_30m': 30,
                            'glc_2015_30m': 30,
                            'glc_2010_30m': 30,
@@ -39,7 +97,10 @@ class landcover:
                            'glc_1995_30m': 30,
                            'glc_1990_30m': 30,
                            'glc_1985_30m': 30,
-                           'glc_2017_10m_Tinghua': 10}
+                           'glc_2017_10m_Tinghua': 10,
+                           'GlobaLand30_2000': 30,
+                           'GlobaLand30_2010': 30,
+                           'GlobaLand30_2020': 30}
         self.count = {'glc_2020_30m': Counter({10: 0, 11: 0, 12: 0, 20: 0, 51: 0, 52: 0, 61: 0, 62: 0,
                                                71: 0, 72: 0, 81: 0, 82: 0, 91: 0, 92: 0, 120: 0, 121: 0,
                                                122: 0, 130: 0, 140: 0, 150: 0, 152: 0, 153: 0, 180: 0,
@@ -73,7 +134,14 @@ class landcover:
                                                122: 0, 130: 0, 140: 0, 150: 0, 152: 0, 153: 0, 180: 0,
                                                190: 0, 200: 0, 201: 0, 202: 0, 210: 0, 220: 0, 250: 0}),
                       'glc_2017_10m_Tinghua': Counter({10: 0, 20: 0, 30: 0, 40: 0, 50: 0, 60: 0, 70: 0,
-                                                       80: 0, 90: 0, 100: 0})}
+                                                       80: 0, 90: 0, 100: 0}),
+                      'GlobaLand30_2000': Counter({10: 0, 20: 0, 30: 0, 40: 0, 50: 0, 60: 0, 70: 0, 80: 0,
+                                                   90: 0, 100: 0}),
+                      'GlobaLand30_2010': Counter({10: 0, 20: 0, 30: 0, 40: 0, 50: 0, 60: 0, 70: 0, 80: 0,
+                                                   90: 0, 100: 0}),
+                      'GlobaLand30_2020': Counter({10: 0, 20: 0, 30: 0, 40: 0, 50: 0, 60: 0, 70: 0, 80: 0,
+                                                   90: 0, 100: 0})
+                      }
         self.value_to_className = {'glc_2020_30m': {10: 'Rainfed cropland',
                                                     11: 'Herbaceous cover',
                                                     12: 'Tree or shrub cover (Orchard)',
@@ -323,7 +391,38 @@ class landcover:
                                                             70: 'Tundra',
                                                             80: 'Impervious surface',
                                                             90: 'Bareland',
-                                                            100: 'Snow/Ice'}}
+                                                            100: 'Snow/Ice'},
+                                   'GlobaLand30_2000': {10: 'Cultivated Land',
+                                                        20: 'Forest',
+                                                        30: 'Grassland',
+                                                        40: 'Shrubland',
+                                                        50: 'Wetland',
+                                                        60: 'Water',
+                                                        70: 'Tundra',
+                                                        80: 'Impervious surface',
+                                                        90: 'Bareland',
+                                                        100: 'Snow/Ice'},
+                                   'GlobaLand30_2010': {10: 'Cultivated Land',
+                                                        20: 'Forest',
+                                                        30: 'Grassland',
+                                                        40: 'Shrubland',
+                                                        50: 'Wetland',
+                                                        60: 'Water',
+                                                        70: 'Tundra',
+                                                        80: 'Impervious surface',
+                                                        90: 'Bareland',
+                                                        100: 'Snow/Ice'},
+                                   'GlobaLand30_2020': {10: 'Cultivated Land',
+                                                        20: 'Forest',
+                                                        30: 'Grassland',
+                                                        40: 'Shrubland',
+                                                        50: 'Wetland',
+                                                        60: 'Water',
+                                                        70: 'Tundra',
+                                                        80: 'Impervious surface',
+                                                        90: 'Bareland',
+                                                        100: 'Snow/Ice'}
+                                   }
         self.datasetProcessFunction = {
             'glc_2020_30m': rasterclip.glc2020Raster,
             'glc_2015_30m': rasterclip.glc2020Raster,
@@ -333,7 +432,10 @@ class landcover:
             'glc_1995_30m': rasterclip.glc2020Raster,
             'glc_1990_30m': rasterclip.glc2020Raster,
             'glc_1985_30m': rasterclip.glc2020Raster,
-            'glc_2017_10m_Tinghua': rasterclip.glc2017Raster
+            'glc_2017_10m_Tinghua': rasterclip.glc2017Raster,
+            'GlobaLand30_2000': rasterclip.GlobaLand2020Raster,
+            'GlobaLand30_2010': rasterclip.GlobaLand2020Raster,
+            'GlobaLand30_2020': rasterclip.GlobaLand2020Raster
         }
 
     def download_GLC_ChineseAcademyOfSciences(self):
@@ -373,14 +475,14 @@ class landcover:
         f1.close()
 
     def __str__(self):
-        return '包含土地利用覆盖数据产品：GLC1985-2020全球30m土地覆被数据集、清华大学glc2017全球30m土地覆被数据'
+        return '包含土地利用覆盖数据产品：GLC1985-2020全球30m土地覆被数据集、清华大学glc2017全球30m土地覆被数据、GlobaLand30_2000、2010、2020年全球土地覆被数据'
 
 
 def downDataset(api, datasetName):
     dataset = landcover()
     if not os.path.exists(dataset.dataset[datasetName][0][:-4] + 'getAllFileListBySdoId.json'):
         data_json = json.loads(requests.get(api).text)
-    # save json
+        # save json
         with open(dataset.dataset[datasetName][0][:-4] + 'getAllFileListBySdoId.json', 'w') as f:
             f.write(json.dumps(data_json, ensure_ascii=False))
     else:

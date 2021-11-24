@@ -10,11 +10,10 @@
 @time: 2021/11/9 15:44
 """
 from py2neo import Graph, Node, Relationship
-from conutrykg import districts
+from conutrykg import districts, landcover
 import os
 import pandas as pd
 import geopandas
-from shapely.geometry import Point, Polygon, shape
 
 
 class DistrictGraph:
@@ -25,6 +24,8 @@ class DistrictGraph:
         self.graph = Graph(f"http://localhost:{port}", auth=(self.neo4j_name, self.neo4j_password))
         # 初始化行政单位数据
         self.districts = districts.District()
+        # 初始化土地覆被数据集
+        self.glc = landcover.landcover()
 
     def create_districts_graph(self):
         """
@@ -104,21 +105,55 @@ class DistrictGraph:
                 longitude = point.x
                 node = self.graph.nodes.match(alias=alias).all()
                 if len(node) == 1:
-                    self.graph.run(f"match(n) where n.alias = '{alias}' set n.center=point({{latitude: {latitude}, longitude: {longitude}}})")
+                    self.graph.run(
+                        f"match(n) where n.alias = '{alias}' set n.center=point({{latitude: {latitude}, longitude: {longitude}}})")
                 else:
                     print(node, '--未处理')
-                if (index+1) % 200 == 0:
-                    print(f'已处理{index+1}/{len(self.graph)+1}')
+                if (index + 1) % 200 == 0:
+                    print(f'已处理{index + 1}/{len(self.graph) + 1}')
         else:
             print('数据不存在！！！')
-
 
     def create_landcover_graph(self):
         """
         根据不同数据集按照行政区划统计的数据添加进中国行政区划图谱
         :return:
         """
-        pass
+        for alias, filePath in list(self.glc.dataset.items()):
+            print(f'正在添加{alias}数据······')
+            graph_node_count = len(self.graph.nodes)
+            graph_relationship_count = len(self.graph.relationships)
+            infoDict = self.glc.datasetLink[alias]
+            infoDict['resolution'] = self.glc.resolution[alias]
+            infoDict['name'] = alias
+            statistics = pd.read_csv(os.path.join(filePath[1], 'Statistics', 'districts_statistics.csv'), index_col=0)
+            count = 0
+            addNodeCount = 0
+            for _, line in statistics.iterrows():
+                lineDict = dict(line)
+                node = self.graph.nodes.match(alias=lineDict['name']).first()
+                areaNode = Node('statistics', area=lineDict['area'], unit='KM2', data=lineDict['area'])  # data属性是为了显示方便
+                node_areaNode = Relationship(node, self.glc.label[alias][1], areaNode)
+                node_areaNode.update(infoDict)
+                self.graph.create(node_areaNode)
+                addNodeCount += 1
+                for key, value in lineDict.items():
+                    if value != 0 and key != 'name' and key != 'area':
+                        percentageNode = Node('statistics', percentage=value * 100, data=value * 100,
+                                              area=lineDict['area'] * value, unit='KM2')  # data属性是为了显示方便
+                        areaNode_categoryNode = Relationship(areaNode, 'category', percentageNode)
+                        areaNode_categoryNode.update({'name': key})
+                        # 用merge可能导致占比相等，但是面积是不相等的，因此使用merge的话需要去掉percentageNode的area属性
+                        # percentageNode.__primarylabel__ = "statistics"
+                        # percentageNode.__primarykey__ = "percentage"
+                        self.graph.create(areaNode_categoryNode)
+                        addNodeCount += 1
+                count += 1
+                if count % 100 == 0:
+                    print(f'已处理{count}/{statistics.shape[0]}')
+            print(f'已处理{count}/{statistics.shape[0]}')
+            print(
+                f'新增节点：{len(self.graph.nodes) - graph_node_count}个，新增关系：{len(self.graph.relationships) - graph_relationship_count}条。')
 
     def __str__(self):
         return f'DataBase {self.neo4j_name}:{len(self.graph.nodes)} nodes, {len(self.graph.relationships)} relationships'
@@ -126,8 +161,14 @@ class DistrictGraph:
 
 if __name__ == "__main__":
     district_graph = DistrictGraph(11005)
-    # district_graph.graph.delete_all()
-    # district_graph.create_districts_graph()
+    print('数据库已连接')
+    print("正在添加行政区划数据")
+    district_graph.create_districts_graph()
+    print('行政区划数据已添加')
+    print('正在添加地理空间数据')
     district_graph.add_spatial_point()
-    # district_graph.create_landcover_graph()
+    print('地理空间数据已添加')
+    print('正在添加土地覆被数据')
+    district_graph.create_landcover_graph()
+    print('土地覆被数据已添加')
     print('end')

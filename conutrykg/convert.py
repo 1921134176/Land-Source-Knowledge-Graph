@@ -16,6 +16,10 @@ Date:   2019-05-09
 """
 
 import math
+import gdal
+from gdal import ogr
+from gdal import osr
+import os
 
 PI = math.pi
 PIX = math.pi * 3000 / 180
@@ -139,12 +143,74 @@ def mapbar_to_bd09(lng, lat):
     return lng, lat
 
 
+def VectorTranslate(
+        shapeFilePath,
+        saveFolderPath,
+        format="ESRI Shapefile",
+        accessMode=None,
+        dstSrsESPG=4326,
+        selectFields=None,
+        geometryType="POLYGON",
+        dim="XY",
+):
+    """
+    转换矢量文件，包括坐标系，名称，格式，字段，类型，纬度等。
+    :param shapeFilePath: 要转换的矢量文件
+    :param saveFolderPath: 生成矢量文件保存目录
+    :param format: 矢量文件格式，强烈建议不要使用ESRI Shapefile格式。
+    :param accessMode:None代表creation,'update','append','overwrite'
+    :param dstSrsESPG: 目标坐标系EPSG代码，4326是wgs84地理坐标系
+    :param selectFields: 需要保留的字段列表如果都保留，则为None
+    :param geometryType: 几何类型,"POLYGON","POINT"。。。
+    :param dim: 新矢量文件坐标纬度,建议查阅官方API。
+    :return:
+    """
+    ogr.RegisterAll()
+    gdal.SetConfigOption("GDAL_FILENAME_IS_UTF8", "YES")
+    # data = ogr.Open(shapeFilePath)
+    # layer = data.GetLayer()
+    # spatial = layer.GetSpatialRef()
+    # layerName = layer.GetName()
+    # data.Destroy()
+    spatial = osr.SpatialReference()
+    spatial.ImportFromEPSG(4326)
+    layerName = shapeFilePath.split('\\')[-2] + '_ProjectUTM'
+    dstSRS = osr.SpatialReference()
+    dstSRS.ImportFromEPSG(int(dstSrsESPG))
+    if format == "GeoJSON":
+        destDataName = layerName + ".geojson"
+        destDataPath = os.path.join(saveFolderPath, destDataName)
+    elif format == "ESRI Shapefile":
+        destDataName = '..\\data\\ChineseDistrictShape\\' + shapeFilePath.split('\\')[-2]
+        destDataPath = os.path.join(destDataName, layerName + ".shp")
+    else:
+        print("不支持该格式！")
+        return
+    options = gdal.VectorTranslateOptions(
+        format=format,
+        accessMode=accessMode,
+        srcSRS=spatial,
+        dstSRS=dstSRS,
+        reproject=True,
+        selectFields=selectFields,
+        layerName=layerName,
+        geometryType=geometryType,
+        dim=dim
+    )
+    gdal.VectorTranslate(
+        destDataPath,
+        srcDS=shapeFilePath,
+        options=options
+    )
+    return destDataPath
+
+
 if __name__ == '__main__':
     blng, blat = 121.4681891220,31.1526609317
     a = bd09_to_gcj02(blng, blat)
     print('BD09:', (blng, blat))
     print('BD09 -> GCJ02:', bd09_to_gcj02(blng, blat))
-    print('BD09 -> WGS84:',bd09_to_wgs84(blng, blat))
+    print('BD09 -> WGS84:', bd09_to_wgs84(blng, blat))
     wlng, wlat = 121.45718237717077, 31.14846209914084
     print('WGS84:', (wlng, wlat))
     print('WGS84 -> GCJ02:', wgs84_to_gcj02(wlng, wlat))

@@ -12,10 +12,13 @@
 import requests
 import json
 import os
-from conutrykg import convert
+from conutrykg import convert, rasterclip
 import pandas as pd
 import geopandas
 from shapely.geometry import Point, Polygon, shape
+import gdal
+from osgeo import ogr, osr
+import shapefile
 
 
 class District:
@@ -178,8 +181,60 @@ class District:
         data = json.loads(response.text)
         return data
 
+    def addProject(self):
+        """
+        为矢量数据添加wgs84坐标参考文件
+        :return:
+        """
+
+        files = os.listdir('..\\data\\ChineseDistrictShape\\')
+        for file in files:
+            if os.path.exists('..\\data\\ChineseDistrictShape\\' + file + f'\\{file}.shp'):
+                with open('..\\data\\ChineseDistrictShape\\' + file + f'\\{file}.prj', 'w') as f:
+                    f.write('GEOGCS["GCS_WGS_1984",DATUM["D_WGS_1984",SPHEROID["WGS_1984",6378137.0,298.257223563]],PRIMEM["Greenwich",0.0],UNIT["Degree",0.0174532925199433]]')
+
+    def reproject_wgs82_utm(self):
+        """
+        为矢量数据进行批量重投影
+        :return:
+        """
+        wkid = {1: 32601, 2: 32602, 3: 32603, 4: 32604, 5: 32605, 6: 32606, 7: 32607, 8: 32608, 9: 32609, 10: 32610,
+                11: 32611, 12: 32612, 13: 32613, 14: 32614, 15: 32615, 16: 32616, 17: 32617, 18: 32618, 19: 32619,
+                20: 32620, 21: 32621, 22: 32622, 23: 32623, 24: 32624, 25: 32625, 26: 32626, 27: 32627, 28: 32628,
+                29: 32629, 30: 32630, 31: 32631, 32: 32632, 33: 32633, 34: 32634, 35: 32635, 36: 32636, 37: 32637,
+                38: 32638, 39: 32639, 40: 32640, 41: 32641, 42: 32642, 43: 32643, 44: 32644, 45: 32645, 46: 32646,
+                47: 32647, 48: 32648, 49: 32649, 50: 32650, 51: 32651, 52: 32652, 53: 32653, 54: 32654, 55: 32655,
+                56: 32656, 57: 32657, 58: 32658, 59: 32659, 60: 32660}
+        gdal.SetConfigOption("SHAPE_ENCODING", "utf-8")
+        gdal.SetConfigOption("GDAL_FILENAME_IS_UTF8", "YES")
+        count = 0
+        # 全部处理的代码
+        files = os.listdir('..\\data\\ChineseDistrictShape\\')
+        for file in files:
+            if os.path.exists('..\\data\\ChineseDistrictShape\\' + file + f'\\{file}.shp'):
+                # 获取utm投影带号
+                r = shapefile.Reader('..\\data\\ChineseDistrictShape\\' + file + f'\\{file}.shp')
+                bound = list(r.bbox)  # 左、下、右、上
+                bandNUm = int(((bound[0] + bound[2]) / 2) // 6 + 31)
+                if file != 'center_point':
+                    convert.VectorTranslate('..\\data\\ChineseDistrictShape\\' + file + f'\\{file}.shp',
+                                            '..\\data\\ChineseDistrictShape\\' + file + '\\',
+                                            dstSrsESPG=wkid[bandNUm])
+                # else:
+                    # convert.VectorTranslate('..\\data\\ChineseDistrictShape\\' + file + f'\\{file}.shp',
+                    #                         '..\\data\\ChineseDistrictShape\\' + file + '\\',
+                    #                         dstSrsESPG=wkid[bandNUm],
+                    #                         geometryType='POINT')
+            count += 1
+            if count % 100 == 0:
+                print(f'已完成：{count}/6491')
+        print(f'已完成：{count}/6491')
+
 
 if __name__ == "__main__":
     district = District()
-    data = district.get_district_from_gaode('中国')
-    print(data['status'])
+    # data = district.get_district_from_gaode('中国')
+    # district.addProject()
+    # 将矢量重投影为utm
+    district.reproject_wgs82_utm()
+    # print(data['status'])

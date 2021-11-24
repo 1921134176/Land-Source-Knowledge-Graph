@@ -18,30 +18,39 @@ import pandas as pd
 import multiprocessing
 
 
-def clipRaster(rasterName, shpPath, savePath):
+def clipRaster(rasterName, shpPath, savePath, project='wgs84'):
     """
     矢量裁剪栅格，矢量和栅格需要保持相同的空间参考
-    :param rasterPath:
+    :param rasterName:
     :param shpPath:
     :param savePath:
+    :param project: 选择不同投影的矢量文件
     :return:
     """
     # 要裁剪的原图
     input_raster = gdal.Open(rasterName)
-    # 读取shp文件所在的文件夹
-    files = os.listdir(shpPath)
-    for f in files:  # 循环读取路径下的文件并筛选输出
-        if os.path.splitext(f)[1] == ".shp":
-            name = os.path.splitext(f)[0]
-            input_shape = shpPath + f
-            r = shapefile.Reader(input_shape)
-            output_raster = savePath + name + '.tif'
-            ds = gdal.Warp(output_raster,
-                           input_raster,
-                           format='GTiff',
-                           outputBounds=r.bbox,
-                           cutlineDSName=input_shape,
-                           dstNodata=0)
+    if project == 'wgs84':
+        name = shpPath.split('\\')[-2]
+        input_shape = shpPath + name + '.shp'
+        r = shapefile.Reader(input_shape)
+        output_raster = savePath + name + '.tif'
+        ds = gdal.Warp(output_raster,
+                       input_raster,
+                       format='GTiff',
+                       outputBounds=r.bbox,
+                       cutlineDSName=input_shape,
+                       dstNodata=0)
+    elif project == 'utm':
+        name = shpPath.split('\\')[-2]
+        input_shape = shpPath + name + '_ProjectUTM.shp'
+        r = shapefile.Reader(input_shape)
+        output_raster = savePath + name + '.tif'
+        ds = gdal.Warp(output_raster,
+                       input_raster,
+                       format='GTiff',
+                       outputBounds=r.bbox,
+                       cutlineDSName=input_shape,
+                       dstNodata=0)
     ds = None
 
 
@@ -107,6 +116,80 @@ def glc2017Raster(bound, datasetPath):
     return rasterList, [index_left, index_down, index_right, index_up]
 
 
+def GlobaLand2020Raster(bound, datasetPath, project='wgs84'):
+    """
+    利用边界获取裁剪所需要的影像文件
+    :param bound:
+    :param datasetPath:
+    :return:
+    """
+    rasterList = []
+    b_left, b_down, b_right, b_up = bound
+    # 左边所在带号
+    index_left = int(b_left//6 + 31)
+    # 右边所在带号
+    index_right = int(b_right//6 + 31)
+    span = 5
+    index_down = int(b_down // span * span)
+    index_up = int((b_up // span + int(b_up % span > 0)) * span)
+    year = datasetPath.split('\\')[3][-4:]
+    if b_down <= 60 and b_up <= 60:
+        for i in range(index_left, index_right+1):
+            for j in range(index_down, index_up, span):
+                if j == 0:
+                    if project == 'wgs84':
+                        fileName = datasetPath + f'N{i}_00_{year}LC030\\' + f'n{i}_00_{year}lc030_reproject_wgs84.tif'
+                    elif project == 'utm':
+                        fileName = datasetPath + f'N{i}_00_{year}LC030\\' + f'n{i}_00_{year}lc030.tif'
+                elif j == 5:
+                    if project == 'wgs84':
+                        fileName = datasetPath + f'N{i}_05_{year}LC030\\' + f'n{i}_05_{year}lc030_reproject_wgs84.tif'
+                    elif project == 'utm':
+                        fileName = datasetPath + f'N{i}_05_{year}LC030\\' + f'n{i}_05_{year}lc030.tif'
+                else:
+                    if project == 'wgs84':
+                        fileName = datasetPath + f'N{i}_{j}_{year}LC030\\' + f'n{i}_{j}_{year}lc030_reproject_wgs84.tif'
+                    elif project == 'utm':
+                        fileName = datasetPath + f'N{i}_{j}_{year}LC030\\' + f'n{i}_{j}_{year}lc030.tif'
+                if os.path.exists(fileName):
+                    rasterList.append(fileName)
+    elif b_down >= 60 and b_up >= 60:
+        if index_left % 2 == 0:
+            index_left -= 1
+        if index_right % 2 == 0:
+            index_right -= 1
+        for i in range(index_left, index_right+2, 2):
+            for j in range(index_down, index_up, span):
+                if project == 'wgs84':
+                    fileName = datasetPath + f'N{i}_{j}_{year}LC030\\' + f'n{i}_{j}_{year}lc030_reproject_wgs84.tif'
+                elif project == 'utm':
+                    fileName = datasetPath + f'N{i}_{j}_{year}LC030\\' + f'n{i}_{j}_{year}lc030.tif'
+                if os.path.exists(fileName):
+                    rasterList.append(fileName)
+    elif b_down <= 60 and b_up >= 60:
+        if index_left % 2 == 0:
+            index_left -= 1
+        if index_right % 2 == 0:
+            index_right -= 1
+        for i in range(index_left, index_right+2, 2):
+            for j in range(60, index_up, span):
+                if project == 'wgs84':
+                    fileName = datasetPath + f'N{i}_{j}_{year}LC030\\' + f'n{i}_{j}_{year}lc030_reproject_wgs84.tif'
+                elif project == 'utm':
+                    fileName = datasetPath + f'N{i}_{j}_{year}LC030\\' + f'n{i}_{j}_{year}lc030.tif'
+                if os.path.exists(fileName):
+                    rasterList.append(fileName)
+        for i in range(index_left, index_right+2):
+            for j in range(index_down, 60, span):
+                if project == 'wgs84':
+                    fileName = datasetPath + f'N{i}_{j}_{year}LC030\\' + f'n{i}_{j}_{year}lc030_reproject_wgs84.tif'
+                elif project == 'utm':
+                    fileName = datasetPath + f'N{i}_{j}_{year}LC030\\' + f'n{i}_{j}_{year}lc030.tif'
+                if os.path.exists(fileName):
+                    rasterList.append(fileName)
+    return rasterList, [index_left, index_down, index_right, index_up]
+
+
 def rasterMosaic(rasterList, outputPath, outputName):
     """
     栅格数据镶嵌
@@ -123,13 +206,14 @@ def rasterMosaic(rasterList, outputPath, outputName):
     gdal_merge.main(arg)
 
 
-def clipDatasatRasterFromShp(datasetPath, shapePath, outputPath, glc):
+def clipDatasatRasterFromShp(datasetPath, shapePath, outputPath, glc, project='wgs84'):
     """
     从产品数据集中自动拼接矢量裁剪所需要的影像并裁剪
     :param datasetPath:
     :param ShapePath:
     :param outputPath:
     :param glc:选择对应数据集处理函数
+    :param project: 选择不同投影的矢量文件
     :return:
     """
     if not os.path.exists(outputPath):
@@ -137,19 +221,19 @@ def clipDatasatRasterFromShp(datasetPath, shapePath, outputPath, glc):
     # 获取矢量最大外接矩形的边界范围
     bound = shapeBound(shapePath)
     # 根据范围在数据产品中筛选出裁剪所需要的影像
-    rasterList, rasterBound = glc(bound, datasetPath)
+    rasterList, rasterBound = glc(bound, datasetPath, project)
     if len(rasterList) > 1:
         if os.path.exists(outputPath + '-'.join([str(i) for i in rasterBound]) + '.tif'):
             # 裁剪
-            clipRaster(outputPath + '-'.join([str(i) for i in rasterBound]) + '.tif', shapePath, outputPath)
+            clipRaster(outputPath + '-'.join([str(i) for i in rasterBound]) + '.tif', shapePath, outputPath, project)
         else:
             # 将影像进行拼接
             rasterMosaic(rasterList, outputPath, '-'.join([str(i) for i in rasterBound]) + '.tif')
             # 裁剪
-            clipRaster(outputPath + '-'.join([str(i) for i in rasterBound]) + '.tif', shapePath, outputPath)
+            clipRaster(outputPath + '-'.join([str(i) for i in rasterBound]) + '.tif', shapePath, outputPath, project)
     else:
         # 裁剪
-        clipRaster(rasterList[0], shapePath, outputPath)
+        clipRaster(rasterList[0], shapePath, outputPath, project)
     # os.remove(outputPath + 'out.tif')
 
 
@@ -174,12 +258,13 @@ def baseDistricts():
     return shapeFilePath
 
 
-def ChineseDistrictsLandcover(rasterDataName='all'):
+def ChineseDistrictsLandcover(rasterDataName='all', project='wgs84'):
     """
     裁剪出中国区级以及部分市级（下一级直接为街道）行政区划的土地覆盖数据
     :param rasterDataName: 裁剪的数据集名称，默认为landcover中的所有数据集。
     可选：'glc_2020_30m'、
     :param glc:选择对应数据集处理函数
+    :param project: 选择不同投影的矢量文件
     :return:
     """
     # 获取所有需要裁剪的矢量文件路径
@@ -196,6 +281,8 @@ def ChineseDistrictsLandcover(rasterDataName='all'):
             for shapePath in shapeFilePath:
                 if os.path.exists(outputPath + shapePath.split('\\')[-2] + '.tif'):
                     count += 1
+                    if count % 200 == 0:
+                        print(f'thread {multiprocessing.current_process().name} is running...' + f'已完成：{count}/{len(shapeFilePath)}')
                     continue
                 clipDatasatRasterFromShp(datasetPath, shapePath, outputPath, landcoverDataset.datasetProcessFunction[datasetName])
                 count += 1
@@ -212,8 +299,10 @@ def ChineseDistrictsLandcover(rasterDataName='all'):
         for shapePath in shapeFilePath:
             if os.path.exists(outputPath + shapePath.split('\\')[-2] + '.tif'):
                 count += 1
+                if count % 200 == 0:
+                    print(f'thread {multiprocessing.current_process().name} is running...' + f'已完成：{count}/{len(shapeFilePath)}')
                 continue
-            clipDatasatRasterFromShp(datasetPath, shapePath, outputPath, landcoverDataset.datasetProcessFunction[rasterDataName])
+            clipDatasatRasterFromShp(datasetPath, shapePath, outputPath, landcoverDataset.datasetProcessFunction[rasterDataName], project)
             count += 1
             if count % 200 == 0:
                 print(f'thread {multiprocessing.current_process().name} is running...' + f'已完成：{count}/{len(shapeFilePath)}')
@@ -247,26 +336,16 @@ def ChineseDistrictsLandcoverStatistics(rasterDataName='all'):
                 ds = gdal.Open(outputPath + district + '.tif')
                 rasterArray = ds.ReadAsArray()
                 statistics = Counter(rasterArray.flatten())
+                allClassCount = dict(landcoverDataset.count[rasterDataName])
+                for i in list(dict(statistics).keys()):
+                    if i in list(allClassCount.keys()):
+                        allClassCount[i] = statistics[i]
+                pixel = sum(list(allClassCount.values()))
                 # 面积(KM*2)
-                if 0 in statistics.keys() and 255 in statistics.keys():
-                    pixel = rasterArray.flatten().size - statistics[0] - - statistics[255]
-                elif 0 in statistics.keys():
-                    pixel = rasterArray.flatten().size - statistics[0]
-                elif 255 in statistics.keys():
-                    pixel = rasterArray.flatten().size - statistics[255]
-                else:
-                    pixel = rasterArray.flatten().size
-                area = pixel * pow((landcoverDataset.resolution[datasetName]) / 1000, 2)
-                allClassCount = dict(landcoverDataset.count[datasetName])
-                allClassCount.update(dict(statistics))
-                # 删除矢量裁剪填充的0、255像素
-                if 0 in allClassCount.keys():
-                    allClassCount.pop(0)
-                if 255 in allClassCount.keys():
-                    allClassCount.pop(255)
+                area = pixel * pow((landcoverDataset.resolution[rasterDataName]) / 1000, 2)
                 for key in list(allClassCount.keys()):
                     allClassCount[key] = allClassCount[key] / pixel
-                    allClassCount[landcoverDataset.value_to_className[datasetName][key]] = allClassCount.pop(key)
+                    allClassCount[landcoverDataset.value_to_className[rasterDataName][key]] = allClassCount.pop(key)
                 allClassCount['name'] = district
                 allClassCount['area'] = area
                 temp = pd.DataFrame(allClassCount, index=[allClassCount['name']])
@@ -274,14 +353,14 @@ def ChineseDistrictsLandcoverStatistics(rasterDataName='all'):
                 table = table.append(temp, verify_integrity=True)
                 ds = None
                 count += 1
-                if count % 200 == 0:
-                    print(f'已完成：{count}/{len(shapeFilePath)}')
-            # 把name列调到第一列
+                if count % 50 == 0:
+                    print(f'thread {multiprocessing.current_process().name} is running...' + f'已完成：{count}/{len(shapeFilePath)}')
+                # 把name列调到第一列
             name = table['name']
             table.drop(labels=['name'], axis=1, inplace=True)
             table.insert(0, 'name', name)
             table.to_csv(outputPath + 'Statistics\\' + 'districts_statistics.csv')
-            print(f'已完成：{count}/{len(shapeFilePath)}')
+            print(f'thread {multiprocessing.current_process().name} is running...' + f'已完成：{count}/{len(shapeFilePath)}')
     else:
         path = landcoverDataset.dataset[rasterDataName]
         print('土地覆盖产品数据源：', rasterDataName)
@@ -295,23 +374,13 @@ def ChineseDistrictsLandcoverStatistics(rasterDataName='all'):
             ds = gdal.Open(outputPath + district + '.tif')
             rasterArray = ds.ReadAsArray()
             statistics = Counter(rasterArray.flatten())
-            # 面积(KM*2)
-            if 0 in statistics.keys() and 255 in statistics.keys():
-                pixel = rasterArray.flatten().size - statistics[0] - - statistics[255]
-            elif 0 in statistics.keys():
-                pixel = rasterArray.flatten().size - statistics[0]
-            elif 255 in statistics.keys():
-                pixel = rasterArray.flatten().size - statistics[255]
-            else:
-                pixel = rasterArray.flatten().size
-            area = pixel * pow((landcoverDataset.resolution[rasterDataName]) / 1000, 2)
             allClassCount = dict(landcoverDataset.count[rasterDataName])
-            allClassCount.update(dict(statistics))
-            # 删除矢量裁剪填充的0、255像素
-            if 0 in allClassCount.keys():
-                allClassCount.pop(0)
-            if 255 in allClassCount.keys():
-                allClassCount.pop(255)
+            for i in list(dict(statistics).keys()):
+                if i in list(allClassCount.keys()):
+                    allClassCount[i] = statistics[i]
+            pixel = sum(list(allClassCount.values()))
+            # 面积(KM*2)
+            area = pixel * pow((landcoverDataset.resolution[rasterDataName]) / 1000, 2)
             for key in list(allClassCount.keys()):
                 allClassCount[key] = allClassCount[key] / pixel
                 allClassCount[landcoverDataset.value_to_className[rasterDataName][key]] = allClassCount.pop(key)
@@ -346,21 +415,38 @@ if __name__ == '__main__':
     # ChineseDistrictsLandcoverStatistics('glc_2020_30m')
 
     # 利用多进程处理1985、1990、1995、2000、2005、2010、2015年数据
-    # pool = multiprocessing.Pool(7)
+    # pool = multiprocessing.Pool(4)
     # for datasetName in ['glc_2015_30m', 'glc_2010_30m', 'glc_2005_30m', 'glc_2000_30m', 'glc_1995_30m', 'glc_1990_30m', 'glc_1985_30m']:
     #     pool.apply_async(ChineseDistrictsLandcover, args=(datasetName, ))
     # pool.close()
     # pool.join()
-    # for datasetName in ['glc_2015_30m', 'glc_2010_30m', 'glc_2005_30m', 'glc_2000_30m', 'glc_1995_30m', 'glc_1990_30m', 'glc_1985_30m']:
+    # for datasetName in ['glc_2020_30m', 'glc_2015_30m', 'glc_2010_30m', 'glc_2005_30m', 'glc_2000_30m', 'glc_1995_30m',
+    #                     'glc_1990_30m', 'glc_1985_30m', 'glc_2017_10m_Tinghua']:
     #     pool.apply_async(ChineseDistrictsLandcoverStatistics, args=(datasetName, ))
     # pool.close()
     # pool.join()
     # print('end')
+
     # 单进程处理1985、1990、1995、2000、2005、2010、2015年数据
-    for datasetName in ['glc_2015_30m', 'glc_2010_30m', 'glc_2005_30m', 'glc_2000_30m', 'glc_1995_30m', 'glc_1990_30m',
-                        'glc_1985_30m']:
-        ChineseDistrictsLandcover(datasetName)
-    for datasetName in ['glc_2015_30m', 'glc_2010_30m', 'glc_2005_30m', 'glc_2000_30m', 'glc_1995_30m', 'glc_1990_30m',
-                        'glc_1985_30m']:
-        ChineseDistrictsLandcoverStatistics(datasetName)
+    # for datasetName in ['glc_2020_30m', 'glc_2015_30m', 'glc_2010_30m', 'glc_2005_30m', 'glc_2000_30m', 'glc_1995_30m',
+    #                     'glc_1990_30m', 'glc_1985_30m', 'glc_2017_10m_Tinghua']:
+    #     ChineseDistrictsLandcover(datasetName)
+    # for datasetName in ['glc_2020_30m', 'glc_2015_30m', 'glc_2010_30m', 'glc_2005_30m', 'glc_2000_30m', 'glc_1995_30m',
+    #                     'glc_1990_30m', 'glc_1985_30m', 'glc_2017_10m_Tinghua']:
+    #     ChineseDistrictsLandcoverStatistics(datasetName)
+
+    # 处理GlobaLand2000、2010、2020年数据
+    # pool = multiprocessing.Pool(3)
+    # for datasetName in ['GlobaLand30_2020', 'GlobaLand30_2010', 'GlobaLand30_2000']:
+    #     pool.apply_async(ChineseDistrictsLandcover, args=(datasetName,))
+    # pool.close()
+    # pool.join()
+    # pool = multiprocessing.Pool(3)
+    # for datasetName in ['GlobaLand30_2020', 'GlobaLand30_2010', 'GlobaLand30_2000']:
+    #     ChineseDistrictsLandcoverStatistics(datasetName)
+    #     pool.apply_async(ChineseDistrictsLandcoverStatistics, args=(datasetName,))
+    # pool.close()
+    # pool.join()
+    ChineseDistrictsLandcover('GlobaLand30_2010')
+    ChineseDistrictsLandcoverStatistics('GlobaLand30_2010')
     print('end')
