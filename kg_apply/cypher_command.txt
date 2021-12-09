@@ -1,0 +1,18 @@
+区域一致性节点查询：
+match p=(n{name:'武昌区'})-[:Landcover_Dataset{year:2020}]-()-[:compare_with]-() return p
+
+统计空间一致性和面积一致性都不足60%的节点数量：
+match (n1)-[:Landcover_Dataset{year:2020}]-()-[r1:compare_with]-(m1),(n2)-[:Landcover_Dataset{year:2020}]-()-[r2:compare_with]-(m2)
+where (r1.proxy='皮尔森相关系数-R' and m1.data<=60) and (r2.proxy='总体一致性系数-N' and m2.data<=60) and (n1=n2)
+return count(DISTINCT(n1))
+
+统计空间一致性和面积一致性都大于80%的节点数量：
+match (n1)-[:Landcover_Dataset{year:2020}]-()-[r1:compare_with]-(m1),(n2)-[:Landcover_Dataset{year:2020}]-()-[r2:compare_with]-(m2)
+where (r1.proxy='皮尔森相关系数-R' and m1.data>80) and (r2.proxy='总体一致性系数-N' and m2.data>80) and (n1=n2)
+return count(DISTINCT(n1))
+
+1985-2020城市面积增长最快的区域：
+match p1=(c1)-[]->(n1)-[r1:Landcover_Dataset{name:'glc_2020_30m'}]->(s)-[:category{name:'Impervious surfaces'}]-(m1),p2=(n1)-[r2:Landcover_Dataset{name:'glc_1985_30m'}]->()-[:category{name:'Impervious surfaces'}]-(m2)
+return c1.name as city,n1.name as name,m2.data as year_1985,m1.data as year_2020,m1.data-m2.data as grow,s.data as area,(m1.data-m2.data)*s.data/100 as grow_area
+order by grow DESC
+limit 10

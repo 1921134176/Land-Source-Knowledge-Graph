@@ -97,11 +97,11 @@ def consistency_raster_dataset(rasterDirPath1, rasterDirPath2):
                          f" where r.name='glc_2020_30m' or r.name='GlobaLand30_2020' "
                          f"return n, r.name as dataName").data()
         if data[0]['dataName'] == 'glc_2020_30m':
-            node_glc2020 = graph.nodes.match('statistics', data=data[0]['n']['data']).first()
-            node_globaland30 = graph.nodes.match('statistics', data=data[1]['n']['data']).first()
+            node_glc2020 = graph.nodes.match('statistics', data=data[0]['n']['data']).all()[-1]
+            node_globaland30 = graph.nodes.match('statistics', data=data[1]['n']['data']).all()[-1]
         else:
-            node_glc2020 = graph.nodes.match('statistics', data=data[0]['n']['data']).first()
-            node_globaland30 = graph.nodes.match('statistics', data=data[1]['n']['data']).first()
+            node_glc2020 = graph.nodes.match('statistics', data=data[0]['n']['data']).all()[-1]
+            node_globaland30 = graph.nodes.match('statistics', data=data[1]['n']['data']).all()[-1]
         node_glc2020_node_N = Relationship(node_glc2020, 'compare_with', node_N, compare_dataset='GlobaLand30_2020',
                                            proxy='总体一致性系数-N')
         node_glc2020_node_R = Relationship(node_glc2020, 'compare_with', node_R, compare_dataset='GlobaLand30_2020',
@@ -136,9 +136,9 @@ def consistency_raster_dataset(rasterDirPath1, rasterDirPath2):
                 r = Relationship(node_PD, 'category', Node('proxy', name='不同地类百分比不一致性-PD', data=v, category=k), name=k)
                 graph.create(r)
         count += 1
-        if count % 100 == 0:
+        if count % 20 == 0:
             print(f'已完成{count}/{len(raster1FilePathList)}')
-    table.to_csv(os.path.join(rasterDirPath1, 'statistics', 'districts_statistics.csv'))
+    # table.to_csv(os.path.join(rasterDirPath1, 'statistics', 'districts_statistics.csv'))
     print(f'已完成{count}/{len(raster1FilePathList)}')
 
 
