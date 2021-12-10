@@ -459,7 +459,7 @@ class landcover:
         # 并行下载
         pool = multiprocessing.Pool(8)
         for index, api in enumerate(apiList):
-            pool.apply_async(downDataset, args=(api, dataName[index]))
+            pool.apply_async(downDataset_GLC, args=(api, dataName[index]))
         pool.close()
         pool.join()
 
@@ -492,7 +492,7 @@ class landcover:
         return '包含土地利用覆盖数据产品：GLC1985-2020全球30m土地覆被数据集、清华大学glc2017全球30m土地覆被数据、GlobaLand30_2000、2010、2020年全球土地覆被数据'
 
 
-def downDataset(api, datasetName):
+def downDataset_GLC(api, datasetName):
     dataset = landcover()
     if not os.path.exists(dataset.dataset[datasetName][0][:-4] + 'getAllFileListBySdoId.json'):
         data_json = json.loads(requests.get(api).text)
@@ -523,9 +523,32 @@ def downDataset(api, datasetName):
     print('thread %s is over!!！' % os.getpid())
 
 
+def downDataset_WSF2015_2019(datasetName):
+    dataset = landcover()
+    count = 0
+    with open(dataset.dataset[datasetName][0][:-4] + 'downURL.txt', 'r') as f1:
+        urls = f1.readlines()
+    for url in urls:
+        if not os.path.exists(dataset.dataset[datasetName][0] + url.split('/')[-1].strip()):
+            wget.download(url.strip(), out=dataset.dataset[datasetName][0] + url.split('/')[-1].strip())
+        count += 1
+        if count % 5 == 0:
+            print('thread %s is running...' % multiprocessing.current_process().name)
+            print(f'{datasetName}已完成：{count}/{len(urls)}')
+    print(f'{datasetName}已完成：{count}/{len(urls)}')
+    print('thread %s is over!!！' % os.getpid())
+
+
 if __name__ == "__main__":
-    glc = landcover()
+    # glc = landcover()
     # glc.download_GLC2017_Tinghua()
     # glc.download_GLC_ChineseAcademyOfSciences()
     # print(landcover())
-    glc.download_WSF2019()
+    # glc.download_WSF2019()
+
+    # 并行下载wsf数据
+    pool = multiprocessing.Pool(2)
+    pool.apply_async(downDataset_WSF2015_2019, args=('WSF2015',))
+    pool.apply_async(downDataset_WSF2015_2019, args=('WSF2019',))
+    pool.close()
+    pool.join()
