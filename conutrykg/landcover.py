@@ -32,11 +32,13 @@ class landcover:
             'glc_2020_30m': ['..\\data\\landcover\\GLC2020\\GLC\\', '..\\data\\ChineseLandcover\\GLC2020\\'],
             'glc_2017_10m_Tinghua': ['..\\data\\landcover\\GLC2017\\GLC\\', '..\\data\\ChineseLandcover\\GLC2017\\'],
             'GlobaLand30_2000': ['..\\data\\landcover\\GlobaLand30_2000\\GLC\\',
-                                   '..\\data\\ChineseLandcover\\GlobaLand30_2000\\'],
+                                 '..\\data\\ChineseLandcover\\GlobaLand30_2000\\'],
             'GlobaLand30_2010': ['..\\data\\landcover\\GlobaLand30_2010\\GLC\\',
-                                   '..\\data\\ChineseLandcover\\GlobaLand30_2010\\'],
+                                 '..\\data\\ChineseLandcover\\GlobaLand30_2010\\'],
             'GlobaLand30_2020': ['..\\data\\landcover\\GlobaLand30_2020\\GLC\\',
-                                   '..\\data\\ChineseLandcover\\GlobaLand30_2020\\']
+                                 '..\\data\\ChineseLandcover\\GlobaLand30_2020\\'],
+            'WSF2019': ['..\\data\\landcover\\WSF2019\\WSF\\', '..\\data\\ChineseLandcover\\WSF2019\\'],
+            'WSF2015': ['..\\data\\landcover\\WSF2015\\WSF\\', '..\\data\\ChineseLandcover\\WSF2015\\']
         }
         self.datasetLink = {
             'glc_1985_30m': {'author': '刘良云', 'company': '中国科学院空天信息创新研究院', '地域范围': '全球陆地区域',
@@ -474,6 +476,18 @@ class landcover:
             # wget.download(url, out=self.dataset['glc_2017_10m_Tinghua'][0] + wget.filename_from_url(url))
         f1.close()
 
+    def download_WSF2019(self):
+        # 2019年全球居民地数据集
+        html = 'https://download.geoservice.dlr.de/WSF2019/files/'
+        r = requests.get(html)
+        data = r.text
+        link_list = re.findall(r"(?<=href=\").+?(?=\")|(?<=href=\').+?(?=\')", data)[1:-1]
+        f1 = open(self.dataset['WSF2019'][0][:-4] + 'downURL.txt', 'w')
+        for url in link_list:
+            f1.writelines('https://download.geoservice.dlr.de/WSF2019/files/' + url)
+            f1.write('\n')
+        f1.close()
+
     def __str__(self):
         return '包含土地利用覆盖数据产品：GLC1985-2020全球30m土地覆被数据集、清华大学glc2017全球30m土地覆被数据、GlobaLand30_2000、2010、2020年全球土地覆被数据'
 
@@ -512,5 +526,6 @@ def downDataset(api, datasetName):
 if __name__ == "__main__":
     glc = landcover()
     # glc.download_GLC2017_Tinghua()
-    glc.download_GLC_ChineseAcademyOfSciences()
-    print(landcover())
+    # glc.download_GLC_ChineseAcademyOfSciences()
+    # print(landcover())
+    glc.download_WSF2019()
