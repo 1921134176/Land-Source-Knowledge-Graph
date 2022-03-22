@@ -1,5 +1,13 @@
+区级数据查询：
+match p=(:city)-[]-(:district{name:'武昌区'})-[:Landcover_Dataset]-()-[:category]-() return p
+
+市级数据查询：
+市级数据拼接：match p=(:city{name:'武汉市'})-[]-(n:district) return p
+市级土地覆盖数据获取：match p=(:city{name:'武汉市'})-[:Landcover_Dataset]-()-[:category]-() return p
+
 区域一致性节点查询：
-match p=(n{name:'武昌区'})-[:Landcover_Dataset{year:2020}]-()-[:compare_with]-() return p
+返回四种评价系数：match p=(n{name:'武昌区'})-[:Landcover_Dataset{year:2020}]-()-[:compare_with]-() return p
+返回更详细的结果：match p1=(n{name:'武昌区'})-[r1:Landcover_Dataset{year:2020}]-()-[:compare_with]-(), p2=(n)-[:Landcover_Dataset{year:2020}]-()-[:compare_with]-()-[:category]-() return p1,p2
 
 统计空间一致性和面积一致性都不足60%的节点数量：
 match (n1)-[:Landcover_Dataset{year:2020}]-()-[r1:compare_with]-(m1),(n2)-[:Landcover_Dataset{year:2020}]-()-[r2:compare_with]-(m2)
